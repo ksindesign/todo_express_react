@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.production.min.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <script type="text/babel">
+        const { useEffect, useState } = React;
+
+        function App() {
+          const [todos, setTodos] = useState([]);
+          const [newTodo, setNewTodo] = useState('');
+
+          const getTodos = async () => {
+            const response = await axios.get('/todos');
+
+            setTodos(response.data);
+          };
+
+          useEffect(() => {
+            getTodos();
+          }, []); // [] means run only once when component mounts
+
+          const addTodo = async () => {
+            const response = await axios.post('/todos', { text: newTodo });
+
+            getTodos();
+          };
+
+          return (
+            <div>
+              <h1>React Todo List</h1>
+              <input
+                type='text'
+                name='todo'
+                id='todo'
+                value={newTodo}
+                onChange={(e) => setNewTodo(e.target.value)}
+              />
+              <button type='button' onClick={addTodo}>
+                追加
+              </button>
+              <ul>
+                {todos.map((todo) => (
+                  <li key={todo.id}>
+                    {todo.text}
+                    <button type='button'>編集</button>
+                    <button type='button'>削除</button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+      </script>
+    </div>
+  </body>
+</html>
