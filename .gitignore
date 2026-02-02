@@ -1,0 +1,7 @@
+.DS_Store
+.agent/
+.env
+node_modules
+workflows
+
+tree.txt
