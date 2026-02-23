@@ -30,4 +30,25 @@ router.post('/todos', (req, res) => {
   res.send(todo);
 });
 
+// TODOを削除
+router.delete('/todos/:id', (req, res) => {
+  const { id } = req.params;
+  todos = todos.filter((todo) => todo.id !== id);
+  res.status(204).send();
+});
+
+// TODOを更新
+router.put('/todos/:id', (req, res) => {
+  const { id } = req.params;
+  const { text } = req.body;
+  const index = todos.findIndex((todo) => todo.id === id);
+
+  if (index !== -1) {
+    todos[index].text = text;
+    res.send(todos[index]);
+  } else {
+    res.status(404).send('Todo not found');
+  }
+});
+
 module.exports = router;

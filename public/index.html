@@ -3,7 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Premium Todo App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="stylesheets/css/style.min.css" />
     <script
       crossorigin
       src="https://unpkg.com/react@18/umd/react.production.min.js"
@@ -16,59 +27,129 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   </head>
   <body>
-    <div id="root">
-      <script type="text/babel">
-        const { useEffect, useState } = React;
+    <div id="root"></div>
+    <script type="text/babel">
+      const { useEffect, useState } = React;
 
-        function App() {
-          const [todos, setTodos] = useState([]);
-          const [newTodo, setNewTodo] = useState('');
+      function App() {
+        const [todos, setTodos] = useState([]);
+        const [newTodo, setNewTodo] = useState('');
 
-          const getTodos = async () => {
+        const getTodos = async () => {
+          try {
             const response = await axios.get('/todos');
-
             setTodos(response.data);
-          };
+          } catch (error) {
+            console.error('Error fetching todos:', error);
+          }
+        };
 
-          useEffect(() => {
+        useEffect(() => {
+          getTodos();
+        }, []);
+
+        const addTodo = async () => {
+          if (!newTodo.trim()) return;
+          try {
+            await axios.post('/todos', { text: newTodo });
+            setNewTodo('');
             getTodos();
-          }, []); // [] means run only once when component mounts
+          } catch (error) {
+            console.error('Error adding todo:', error);
+          }
+        };
 
-          const addTodo = async () => {
-            const response = await axios.post('/todos', { text: newTodo });
+        const deleteTodo = async (id) => {
+          const isDelete = confirm('本当に削除しますか？');
+          if (!isDelete) return;
 
+          try {
+            await axios.delete(`/todos/${id}`);
             getTodos();
-          };
+          } catch (error) {
+            console.error('Error deleting todo:', error);
+          }
+        };
 
-          return (
-            <div>
-              <h1>React Todo List</h1>
-              <input
-                type='text'
-                name='todo'
-                id='todo'
-                value={newTodo}
-                onChange={(e) => setNewTodo(e.target.value)}
-              />
-              <button type='button' onClick={addTodo}>
-                追加
-              </button>
-              <ul>
-                {todos.map((todo) => (
-                  <li key={todo.id}>
-                    {todo.text}
-                    <button type='button'>編集</button>
-                    <button type='button'>削除</button>
+        const editTodo = async (id, currentText) => {
+          const newText = prompt('Edit your task:', currentText);
+          if (
+            newText === null ||
+            newText.trim() === '' ||
+            newText === currentText
+          )
+            return;
+
+          try {
+            await axios.put(`/todos/${id}`, { text: newText });
+            getTodos();
+          } catch (error) {
+            console.error('Error updating todo:', error);
+          }
+        };
+
+        return (
+          <div className='container'>
+            <header>
+              <h1>
+                <i className='fas fa-check-double'></i> TaskMaster
+              </h1>
+              <p className='subtitle'>タスク管理で生産性を高めよう</p>
+            </header>
+
+            <div className='input-card'>
+              <div className='input-group'>
+                <input
+                  type='text'
+                  placeholder='やることリストを入力'
+                  value={newTodo}
+                  onChange={(e) => setNewTodo(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && addTodo()}
+                />
+                <button className='add-btn' type='button' onClick={addTodo}>
+                  <i className='fas fa-plus'></i>
+                </button>
+              </div>
+            </div>
+
+            <div className='todo-list-wrapper'>
+              <ul className='todo-list'>
+                {todos.length === 0 ? (
+                  <li className='empty-state'>
+                    <i className='far fa-clipboard'></i>
+                    <p>タスクはまだありません。</p>
                   </li>
-                ))}
+                ) : (
+                  todos.map((todo) => (
+                    <li className='todo-item' key={todo.id}>
+                      <span className='todo-text'>{todo.text}</span>
+                      <div className='actions'>
+                        <button
+                          className='edit-btn'
+                          title='編集'
+                          onClick={() => editTodo(todo.id, todo.text)}
+                        >
+                          <i className='fas fa-pen'></i>
+                        </button>
+                        <button
+                          className='delete-btn'
+                          title='削除'
+                          onClick={() => deleteTodo(todo.id)}
+                        >
+                          <i className='fas fa-trash'></i>
+                        </button>
+                      </div>
+                    </li>
+                  ))
+                )}
               </ul>
             </div>
-          );
-        }
+          </div>
+        );
+      }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-      </script>
-    </div>
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
   </body>
 </html>
